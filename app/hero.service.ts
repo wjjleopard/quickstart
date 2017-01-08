@@ -8,26 +8,29 @@ import { Hero } from './hero';
 @Injectable()
 export class HeroService {
 
-  private headers = new Headers({'Content-Type': 'application/json'});
-  private heroesUrl = 'app/heroes';  // URL to web api
+  private jsonHeader = new Headers({'Content-Type': 'application/json'});
+  private postHeaders = new Headers({'Content-Type': 'application/x-www-form-urlencoded'});
+
+  private heroesUrl = 'api/list';  // URL to web api
 
   constructor(private http: Http) { }
 
   getHeroes(): Promise<Hero[]> {
-    return this.http.get(this.heroesUrl)
+    return this.http.get("api/list")
                .toPromise()
                .then(response => response.json().data as Hero[])
                .catch(this.handleError);
   }
 
   getHero(id: number): Promise<Hero> {
-    return this.getHeroes()
-               .then(heroes => heroes.find(hero => hero.id === id));
+    return this.http.get("/api/get-hero?id="+ id)
+      .toPromise()
+      .then(response => response.json().data as Hero)
   }
 
   delete(id: number): Promise<void> {
-    const url = `${this.heroesUrl}/${id}`;
-    return this.http.delete(url, {headers: this.headers})
+    const url = `api/delete?id=${id}`;
+    return this.http.delete(url, {headers: this.jsonHeader})
       .toPromise()
       .then(() => null)
       .catch(this.handleError);
@@ -35,16 +38,16 @@ export class HeroService {
 
   create(name: string): Promise<Hero> {
     return this.http
-      .post(this.heroesUrl, JSON.stringify({name: name}), {headers: this.headers})
+      .post("api/create", `name=${name}`, {headers: this.postHeaders})
       .toPromise()
       .then(res => res.json().data)
       .catch(this.handleError);
   }
 
   update(hero: Hero): Promise<Hero> {
-    const url = `${this.heroesUrl}/${hero.id}`;
+    const url = `api/update`;
     return this.http
-      .put(url, JSON.stringify(hero), {headers: this.headers})
+      .put(url, `id=${hero.id}&name=${hero.name}`, {headers: this.postHeaders})
       .toPromise()
       .then(() => hero)
       .catch(this.handleError);
